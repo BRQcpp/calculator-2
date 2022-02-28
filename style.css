@@ -1,0 +1,104 @@
+@font-face {
+    font-family: Spartan;
+    src: url(fonts/Spartan/Spartan-VariableFont_wght.ttf);
+}
+
+@font-face {
+    font-family: "Spartan light";
+    src: url(fonts/Spartan/static/Spartan-Light.ttf);
+}
+
+body {
+    font-family: Spartan;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background-color: #222222;
+    height: 100vh;
+    margin: 0px;
+}
+
+.main-container {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    gap: 40px;
+}
+
+.number-io {
+    height: 150px;
+    width: 100%;
+    box-sizing: border-box;
+    border-top: 1px solid whitesmoke;
+    border-bottom: 1px solid whitesmoke;
+}
+
+#number-input {
+    -webkit-appearance: none;
+    appearance: none;
+    border: none;
+    padding: 0;
+    margin: 0;
+    outline: none;
+
+    font-family: "Spartan light";
+    text-align: center;
+    background-color: #252525;
+    color: white;
+    height: 148px;
+    width: 100%;
+    font-size: 50px;
+}
+
+.keyboard-container {
+    height: 450px;
+    width: 690px;
+    box-sizing: border-box;
+    background-color: #222222;
+}   
+
+.keyboard-row {
+    box-sizing: border-box;
+    height: 112.5px;
+    border-top: 1px solid whitesmoke;
+    padding: 10px 0 10px 0;
+}
+
+.key {
+    width: 111.5px;
+}
+
+.calculate-key {
+    width: 227.5px;
+}
+
+.key, .calculate-key {
+    -webkit-appearance: none;
+    appearance: none;
+    outline: none;
+    border: none;
+
+    font-family: "Spartan light";
+    color: white;
+    background-color: inherit;
+    display: inline-flex;
+    justify-content: center;
+    align-items: center;
+    border-left: 1px solid gray;
+    border-right: 1px solid transparent;
+    box-sizing: border-box;
+    height: 100%;
+    font-size: 22px;
+    
+}
+
+.key:hover, .calculate-key:hover {
+    background-color:#2a2a2a;
+}
+
+.non-border {
+    border: none;
+}
+
