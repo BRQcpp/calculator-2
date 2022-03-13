@@ -136,8 +136,8 @@ input[type='number'] {
     -webkit-appearance: none;
     appearance: none;
     background-color: #222222;
-    border-bottom: 1px solid #7d7d7d;
     border: none;
+    border-bottom: 1px solid #7d7d7d;
     color: #dadada;
     outline: none;
     padding: 3px 0px;
@@ -146,11 +146,10 @@ input[type='number'] {
 
 input[type=number]::-webkit-inner-spin-button, 
 input[type=number]::-webkit-outer-spin-button {
-       background-color: #222222;
-       opacity: 0.3;
-       padding: 2px 0px;
-       width: 1em;
-   }
+    opacity: 0.3;
+    padding: 2px 0px;
+    width: 1em;
+}
 
 .key:first-child {
     border: none;
@@ -169,7 +168,6 @@ input[type=number]::-webkit-outer-spin-button {
     align-items: center;
     appearance: none;
     background-color: inherit;
-    border-left: 1px solid gray;
     border: none;
     box-sizing: border-box;
     color: white;
