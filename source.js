@@ -10,7 +10,6 @@ document.getElementById('dn-input').addEventListener('change', () =>
         decimalNumbers *= 10;
     else    
         decimalNumbers /= 10;
-    console.log(decimalNumbers)
 });
 
 numberInput.addEventListener('blur', () =>
@@ -22,6 +21,11 @@ numberInput.addEventListener('input', () =>
 {
     if(document.querySelector('.number-io').querySelector('.alert'))
         removeAlert(document.querySelector('.number-io'), document.querySelector('#number-input')); 
+    index = numberInput.selectionStart-1;
+    let equation = numberInput.value;
+    let char = equation.slice(index, index+1);
+    equation = equation.slice(0, index) + equation.slice(index+1, equation.length);
+    validateInput(char, equation, index)
 });
 
 document.querySelectorAll('.key').forEach((key) =>
@@ -40,45 +44,190 @@ document.querySelector('.calculate-key').addEventListener('mousedown', () =>
 
 
 
-function addToInput(key)
-{   
-    if(document.querySelector('.number-io').querySelector('.alert'))
-        removeAlert(document.querySelector('.number-io'), document.querySelector('#number-input')); 
+function validateInput(char, equation, index, vk = false)
+{
+    let move = 1;
+    if(char == '*')
+        char = '×';
+    else if(char == '/')
+        char = '÷';
+    else if(char == ',')
+        char = '.';
+    else if(char == 'x²')
+        char = '²';
 
-    switch(key)
+    switch(char)
     {
         case 'C' :
         {
-            numberInput.value = '';
+            equation = '';
             clearAndRemoveResultsChildren();
         } break;
 
         case '⮨' : 
         {
-            let string = numberInput.value;
-            let index = numberInput.selectionStart;
-            numberInput.value = string.substr(0, numberInput.selectionStart-1) + string.substr(numberInput.selectionStart, string.length);
-            numberInput.setSelectionRange(index-1, index-1);
+            equation = equation.slice(0, index-1) + equation.slice(index, equation.length);
+            index = index-2;
         } break;
 
-        case 'x²' :
+        case '√':; case '²':; case '.':; case '%':
         {
-            let string = numberInput.value;
-            let index = numberInput.selectionStart;
-            string = string.slice(0, index) + '²' + string.slice(index, string.length);
-            numberInput.value = string;
-            numberInput.setSelectionRange(index+1, index+1);
+            let lastChar = equation.charAt(index-1);
+            if(lastChar == char)
+                break;
+            if(char == '²')
+            {
+                if((isNaN(lastChar) || index == 0) && lastChar != '.' && lastChar != ')')
+                {
+                        generateAlert('Pick a number first', document.querySelector('.number-io'), document.querySelector('#number-input'));
+                        break;  
+                }
+            }
+            else if(char == '√')
+            {
+                if((lastChar != '÷' && lastChar != '+' && lastChar != '×' && lastChar != '×' && lastChar != '-') && equation.length != 0)
+                {
+                    generateAlert('Do not put root after non operation', document.querySelector('.number-io'), document.querySelector('#number-input'));
+                    break;  
+                }
+            }
+            else if(char == '%')
+            {
+                if(equation.length == 0 || (isNaN(lastChar) && lastChar != '²'))
+                {
+                    generateAlert('Do not put % after non numbers', document.querySelector('.number-io'), document.querySelector('#number-input'));
+                    break;
+                }
+            }
+
+
+            equation = equation.slice(0, index) + char + equation.slice(index, equation.length);
+            
+        } break;
+
+        case '-' : 
+        {
+            if(equation.charAt(index-1) == '.' &&  (equation.charAt(index-2) == '+' || equation.charAt(index-2) == '-' || equation.charAt(index-2) == '×'|| equation.charAt(index-2) == '÷'))
+            {
+                generateAlert('No operations before decimals', document.querySelector('.number-io'), document.querySelector('#number-input'));
+                break;
+            }
+            let lastChar = equation.charAt(index);
+            if(lastChar == '÷' || lastChar == '+' || lastChar == '×')
+                break;
+            let indexes = moveToLastOperation(equation, index);
+            index = indexes.index;
+            let moveBack = indexes.lastIndex != index;
+            let i = 1;
+            while(equation.charAt(index-i-1) == '-')
+            {
+                i++;
+                continue;
+            }
+            if(moveBack == true)
+                index = indexes.lastIndex;
+            if(i == 3)
+                break;
+            equation = equation.slice(0, index) + char + equation.slice(index, equation.length);
+
+        } break;
+
+        case '+' :; case '÷':; case '×':; 
+        {
+            if(index == 0)
+            {
+                generateAlert('Pick a number first', document.querySelector('.number-io'), document.querySelector('#number-input'));
+                break;  
+            }
+            if(equation.charAt(index-1) == '.' &&  (equation.charAt(index-2) == '+' || equation.charAt(index-2) == '-' || equation.charAt(index-2) == '×'|| equation.charAt(index-2) == '÷'))
+            {
+                generateAlert('No operations before decimals', document.querySelector('.number-io'), document.querySelector('#number-input'));
+                break;
+            }
+
+            let indexes = moveToLastOperation(equation, index);
+            index = indexes.index;
+            let moveBack = indexes.lastIndex != index;
+
+            lastChar = equation.charAt(index-1);
+            if(lastChar == '÷' || lastChar == '+' || lastChar == '-' || lastChar == '×' || lastChar == '√') 
+            {
+                if(lastChar == '-')
+                {
+                    let i = 1;
+                    while(equation.charAt(index-i-1) == '-')
+                    {
+                        i++;
+                        continue;
+                    }
+                    if(equation.length == i)
+                    {
+                        generateAlert('Pick a number first', document.querySelector('.number-io'), document.querySelector('#number-input'));
+                        break;  
+                    }
+                    equation = equation.slice(0, index-i) + char + equation.slice(index, equation.length);
+                    index -= i;
+                    lastChar = equation.charAt(index-1);
+                    if(lastChar == '÷' || lastChar == '+' || lastChar == '×')
+                        move--;
+
+                    if(equation.charAt(index-1) == '÷' || equation.charAt(index-1) == '+' || equation.charAt(index-1) == '-' || equation.charAt(index-1) == '×'|| equation.charAt(index-1) == '√')
+                        equation = equation.slice(0, index-1) + char + equation.slice(index+1, equation.length);
+                }
+                else 
+                    equation = equation.slice(0, index-1) + char + equation.slice(index, equation.length);
+            }
+            else
+                equation = equation.slice(0, index) + char + equation.slice(index, equation.length);
+            if(moveBack == true)
+                index = indexes.lastIndex;
         } break;
 
         default: 
         {
-            let string = numberInput.value;
-            let index = numberInput.selectionStart;
-            string = string.slice(0, index) + key + string.slice(index, string.length);
-            numberInput.value = string;
-            numberInput.setSelectionRange(index+1, index+1);
+            equation = equation.slice(0, index) + char + equation.slice(index, equation.length);
         }
     }
+    let moveBack = false;
+    if(numberInput.value.length == equation.length)
+        move--;
+    else 
+        moveBack = true;
+    let selectionRange = numberInput.selectionStart;
+
+    numberInput.value = equation;
+
+    if(vk == true)
+        numberInput.setSelectionRange(index+move, index+move);
+    else if(moveBack == true)
+        numberInput.setSelectionRange(index, index);
+}
+
+
+function moveToLastOperation(equation, index)
+{
+    let lastIndex = index;
+
+    if(equation.charAt(index) == '÷' ||  equation.charAt(index) == '+' || equation.charAt(index) == '×') 
+    {
+        index++;
+        moveBack = true;
+    }
+    else if(equation.charAt(index) == '-' )
+    {
+        while(equation.charAt(index) == '-')
+            index++;
+    }
+    return { index, lastIndex };
+}
+
+
+function addToInput(key)
+{   
+    if(document.querySelector('.number-io').querySelector('.alert'))
+        removeAlert(document.querySelector('.number-io'), document.querySelector('#number-input')); 
+    let index = numberInput.selectionStart;
+    validateInput(key, numberInput.value, index, true);
 }
 
 
@@ -163,16 +312,18 @@ function separateEquasion(equation)
         {
             if(equation.charAt(i) == '+' || equation.charAt(i) == '÷' || equation.charAt(i) == '×' || equation.charAt(i) == '-')
             {
-                if(first != i && equation.charAt(i-1) != '√') // &&  equation.charAt(i-2) != '√'
+                if(first != i && equation.charAt(i-1) != '√')
                 {
                     numbers.push(isCorrectNumber(equation.slice(first, i)));
                     if(isNaN(numbers[numbers.length-1]))
+                    {
+
                         return NaN;
+                    }
                     first = i+1;
                 }
                 if(equation.charAt(i) == '-' &&equation.charAt(i+1) == '-')
                 {
-                    //equation = equation.slice(i+1, i+2)
                     operations.push('+');
                     first++;
                     i++;
@@ -185,7 +336,10 @@ function separateEquasion(equation)
         {
             numbers.push(isCorrectNumber(equation.slice(first, i+1)));
             if(isNaN(numbers[numbers.length-1]))
+            {
+
                 return NaN;
+            }
             break;
         }
     }
@@ -194,6 +348,7 @@ function separateEquasion(equation)
 
     return { numbers: numbers, operations: operations };
 }   
+
 
 function resolve(numbers, operations) 
 {
