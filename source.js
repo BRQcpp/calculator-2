@@ -2,6 +2,7 @@ let numberInput = document.querySelector('#number-input');
 let decimalNumbers = 1000;
 let selectionStart = null;
 let equation;
+numberInput.value = '123+456'
 
 document.getElementById('dn-input').addEventListener('change', () =>
 {
@@ -44,7 +45,7 @@ document.querySelector('.calculate-key').addEventListener('mousedown', () =>
 
 
 
-function validateInput(char, equation, index, vk = false)
+function validateInput(char, equation, index, vk = false, recursive = false)
 {
     let move = 1;
     if(char == '*')
@@ -56,6 +57,8 @@ function validateInput(char, equation, index, vk = false)
     else if(char == 'x²')
         char = '²';
 
+    let override = true;
+
     switch(char)
     {
         case 'C' :
@@ -66,8 +69,11 @@ function validateInput(char, equation, index, vk = false)
 
         case '⮨' : 
         {
-            equation = equation.slice(0, index-1) + equation.slice(index, equation.length);
-            index = index-2;
+            char = equation.slice(index, index+1);
+            equation = equation.slice(0, index-1) + equation.slice(index+1, equation.length);
+            index = validateInput(char, equation, index-1, false, true);
+            equation = numberInput.value;
+            override = false;
         } break;
 
         case '√':; case '²':; case '.':; case '%':
@@ -79,15 +85,17 @@ function validateInput(char, equation, index, vk = false)
             {
                 if((isNaN(lastChar) || index == 0) && lastChar != '.' && lastChar != ')')
                 {
-                        generateAlert('Pick a number first', document.querySelector('.number-io'), document.querySelector('#number-input'));
+                        if(!recursive)
+                            generateAlert('Pick a number first', document.querySelector('.number-io'), document.querySelector('#number-input'));
                         break;  
                 }
             }
             else if(char == '√')
             {
-                if((lastChar != '÷' && lastChar != '+' && lastChar != '×' && lastChar != '×' && lastChar != '-') && equation.length != 0)
+                if(((lastChar != '÷' && lastChar != '+' && lastChar != '×' && lastChar != '×' && lastChar != '-') && equation.length != 0) && index != 0)
                 {
-                    generateAlert('Do not put root after non operation', document.querySelector('.number-io'), document.querySelector('#number-input'));
+                    if(!recursive)
+                        generateAlert('Do not put root after non operation', document.querySelector('.number-io'), document.querySelector('#number-input'));
                     break;  
                 }
             }
@@ -95,7 +103,8 @@ function validateInput(char, equation, index, vk = false)
             {
                 if(equation.length == 0 || (isNaN(lastChar) && lastChar != '²'))
                 {
-                    generateAlert('Do not put % after non numbers', document.querySelector('.number-io'), document.querySelector('#number-input'));
+                    if(!recursive)
+                        generateAlert('Do not put % after non numbers', document.querySelector('.number-io'), document.querySelector('#number-input'));
                     break;
                 }
             }
@@ -109,7 +118,8 @@ function validateInput(char, equation, index, vk = false)
         {
             if(equation.charAt(index-1) == '.' &&  (equation.charAt(index-2) == '+' || equation.charAt(index-2) == '-' || equation.charAt(index-2) == '×'|| equation.charAt(index-2) == '÷'))
             {
-                generateAlert('No operations before decimals', document.querySelector('.number-io'), document.querySelector('#number-input'));
+                if(!recursive)
+                    generateAlert('No operations before decimals', document.querySelector('.number-io'), document.querySelector('#number-input'));
                 break;
             }
             let lastChar = equation.charAt(index);
@@ -118,17 +128,24 @@ function validateInput(char, equation, index, vk = false)
             let indexes = moveToLastOperation(equation, index);
             index = indexes.index;
             let moveBack = indexes.lastIndex != index;
-            let i = 1;
-            while(equation.charAt(index-i-1) == '-')
+            let i = 0;
+            if(equation.charAt(index-1) == '-')
             {
                 i++;
-                continue;
+                while(equation.charAt(index-i) == '-')
+                {
+                    i++;
+                    continue;
+                }
             }
             if(moveBack == true)
                 index = indexes.lastIndex;
-            if(i == 3)
+            if(i == 4)
                 break;
-            equation = equation.slice(0, index) + char + equation.slice(index, equation.length);
+            else if(i > 4)
+                equation = equation.slice(0, index-1) + char + equation.slice(index+1, equation.length);
+            else
+                equation = equation.slice(0, index) + char + equation.slice(index, equation.length);
 
         } break;
 
@@ -136,20 +153,26 @@ function validateInput(char, equation, index, vk = false)
         {
             if(index == 0)
             {
-                generateAlert('Pick a number first', document.querySelector('.number-io'), document.querySelector('#number-input'));
+                if(!recursive)
+                    generateAlert('Pick a number first', document.querySelector('.number-io'), document.querySelector('#number-input'));
                 break;  
             }
             if(equation.charAt(index-1) == '.' &&  (equation.charAt(index-2) == '+' || equation.charAt(index-2) == '-' || equation.charAt(index-2) == '×'|| equation.charAt(index-2) == '÷'))
             {
-                generateAlert('No operations before decimals', document.querySelector('.number-io'), document.querySelector('#number-input'));
+                if(!recursive)
+                    generateAlert('No operations before decimals', document.querySelector('.number-io'), document.querySelector('#number-input'));
                 break;
             }
+
 
             let indexes = moveToLastOperation(equation, index);
             index = indexes.index;
             let moveBack = indexes.lastIndex != index;
-
             lastChar = equation.charAt(index-1);
+
+            if(lastChar == '√') 
+                break;
+
             if(lastChar == '÷' || lastChar == '+' || lastChar == '-' || lastChar == '×' || lastChar == '√') 
             {
                 if(lastChar == '-')
@@ -162,7 +185,8 @@ function validateInput(char, equation, index, vk = false)
                     }
                     if(equation.length == i)
                     {
-                        generateAlert('Pick a number first', document.querySelector('.number-io'), document.querySelector('#number-input'));
+                        if(!recursive)
+                            generateAlert('Pick a number first', document.querySelector('.number-io'), document.querySelector('#number-input'));
                         break;  
                     }
                     equation = equation.slice(0, index-i) + char + equation.slice(index, equation.length);
@@ -170,9 +194,10 @@ function validateInput(char, equation, index, vk = false)
                     lastChar = equation.charAt(index-1);
                     if(lastChar == '÷' || lastChar == '+' || lastChar == '×')
                         move--;
-
-                    if(equation.charAt(index-1) == '÷' || equation.charAt(index-1) == '+' || equation.charAt(index-1) == '-' || equation.charAt(index-1) == '×'|| equation.charAt(index-1) == '√')
+                    if(lastChar == '÷' || lastChar == '+' || lastChar == '-' || lastChar == '×'|| lastChar == '√')
                         equation = equation.slice(0, index-1) + char + equation.slice(index+1, equation.length);
+                    if(i == 1 && equation.charAt(index-1) != '÷' && equation.charAt(index-1) != '×' && equation.charAt(index-1) != '+')
+                        index++;
                 }
                 else 
                     equation = equation.slice(0, index-1) + char + equation.slice(index, equation.length);
@@ -183,7 +208,7 @@ function validateInput(char, equation, index, vk = false)
                 index = indexes.lastIndex;
         } break;
 
-        default: 
+        case '1' :; case '2':; case '3':; case '4':; case '5':; case '6':; case '7':;  case '8':;  case '9':;  case '0':;  case '(':;  case ')':
         {
             equation = equation.slice(0, index) + char + equation.slice(index, equation.length);
         }
@@ -195,12 +220,15 @@ function validateInput(char, equation, index, vk = false)
         moveBack = true;
     let selectionRange = numberInput.selectionStart;
 
-    numberInput.value = equation;
+    if(override == true)
+        numberInput.value = equation;
 
     if(vk == true)
         numberInput.setSelectionRange(index+move, index+move);
     else if(moveBack == true)
         numberInput.setSelectionRange(index, index);
+    if(recursive)
+        return index;
 }
 
 
