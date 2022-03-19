@@ -1,8 +1,7 @@
 let numberInput = document.querySelector('#number-input');
 let decimalNumbers = 1000;
 let selectionStart = null;
-let equation;
-numberInput.value = '123+456'
+let operationDone = false;
 
 document.getElementById('dn-input').addEventListener('change', () =>
 {
@@ -27,6 +26,33 @@ numberInput.addEventListener('input', () =>
     let char = equation.slice(index, index+1);
     equation = equation.slice(0, index) + equation.slice(index+1, equation.length);
     validateInput(char, equation, index)
+});
+
+document.querySelector('.clear-history').addEventListener('click', () =>
+{
+    if(document.querySelector('.calc-history').querySelector('.calc-history-content'))
+    {
+        clearAndRemoveResultsChildren();
+
+        const parent = document.querySelector('.calc-history');
+    
+        let banner = document.createElement('div');
+        banner.classList.add('github-banner');
+    
+        let bannerImg = document.createElement('img');
+        bannerImg.classList.add('gh-img');
+        bannerImg.setAttribute('alt', 'github-logo');
+        bannerImg.setAttribute('id', 'top-banner');
+        bannerImg.setAttribute('src', './graphics/github-icon.png');
+    
+        let bannerSpan = document.createElement('span');
+        bannerSpan.textContent = 'BRQcpp';
+    
+        banner.appendChild(bannerImg);
+        banner.appendChild(bannerSpan);
+    
+        parent.appendChild(banner);
+    }
 });
 
 document.querySelectorAll('.key').forEach((key) =>
@@ -64,7 +90,6 @@ function validateInput(char, equation, index, vk = false, recursive = false)
         case 'C' :
         {
             equation = '';
-            clearAndRemoveResultsChildren();
         } break;
 
         case '⮨' : 
@@ -267,10 +292,11 @@ function resolveMainCalculation(inputValue)
 
     if(!isNaN(result))
     {
-        if(result != equation)
+        if(result != equation && operationDone)
         {
             numberInput.value = result;
             saveResult(inputValue, result);
+            operationDone = false;
         }
     }
     else
@@ -287,7 +313,11 @@ function resolveCalculation(equation)
         if(separatedEquasion.numbers.length == 1)
             result = Math.round((separatedEquasion.numbers.at(0)) * decimalNumbers) / decimalNumbers;
         else
+        {
             result = Math.round((resolve(separatedEquasion.numbers, separatedEquasion.operations) + Number.EPSILON) * decimalNumbers) / decimalNumbers;
+            operationDone = true;
+        }
+            
     }
     return result;
 }
@@ -344,10 +374,7 @@ function separateEquasion(equation)
                 {
                     numbers.push(isCorrectNumber(equation.slice(first, i)));
                     if(isNaN(numbers[numbers.length-1]))
-                    {
-
                         return NaN;
-                    }
                     first = i+1;
                 }
                 if(equation.charAt(i) == '-' &&equation.charAt(i+1) == '-')
@@ -364,10 +391,7 @@ function separateEquasion(equation)
         {
             numbers.push(isCorrectNumber(equation.slice(first, i+1)));
             if(isNaN(numbers[numbers.length-1]))
-            {
-
                 return NaN;
-            }
             break;
         }
     }
@@ -431,6 +455,18 @@ function isCorrectNumber(number)
     let i = 0;
     if(isNaN(number))
     {
+        let decimals = 0;
+        for(let i = 0; i < number.length; i++)
+        {
+            if(number.charAt(i) == '.')
+                decimals++;
+            if(decimals == 2)
+            {
+                number = number.slice(0, i) + number.slice(i+1, number.length);
+                decimals--;
+                i--;
+            }
+        }
         let power = false;
         let precent = false;
         if(number.charAt(i) == '-' && number.charAt(i+1) == '-')
@@ -441,11 +477,13 @@ function isCorrectNumber(number)
         {
             number = number.slice(0, number.length-1);
             precent = true;
+            operationDone = true;
         }
         if(number.charAt(number.length-1) == '²')
         {
             number = number.slice(0, number.length-1);
             power = true;
+            operationDone = true;
         }
         if(number.charAt(i) == '√')
         {
@@ -459,6 +497,7 @@ function isCorrectNumber(number)
             }
             else   
                 number = number.slice(0, i) + Math.sqrt(number.slice(i, number.length))
+            operationDone = true;
         }
         if(power == true)
             number = Math.pow(number, 2);
@@ -472,6 +511,11 @@ function isCorrectNumber(number)
 let resultContentChildrenW = 0;
 function saveResult(calculation, result) 
 {
+    const parent = document.querySelector('.calc-history');
+
+    if(parent.querySelector('.github-banner'))
+        parent.removeChild(parent.querySelector('.github-banner'));
+
     let content = document.createElement('div');
     content.classList.add('calc-history-content');
 
@@ -490,7 +534,6 @@ function saveResult(calculation, result)
     res.textContent = result;
     content.appendChild(res);
 
-    const parent = document.querySelector('.calc-history');
     parent.appendChild(content);
 
     resultContentChildrenW += content.getBoundingClientRect().height + 5;
@@ -503,6 +546,7 @@ function saveResult(calculation, result)
     let resultHistoryEquasions = document.querySelectorAll('.calc-history-content-lr');
     fillInputEL(calc);
     fillInputEL(res);
+    parent.scrollTop = parent.scrollHeight;
 }
 
 function fillInputEL(element)
