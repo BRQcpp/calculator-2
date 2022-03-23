@@ -36,22 +36,27 @@ document.querySelector('.clear-history').addEventListener('click', () =>
 
         const parent = document.querySelector('.calc-history');
     
+        let bannerLink = document.createElement('a');
+        bannerLink.setAttribute('target', '_blank');
+        bannerLink.setAttribute('href', 'https://github.com/BRQcpp');
+        bannerLink.setAttribute('id', 'top-banner');
+        
         let banner = document.createElement('div');
         banner.classList.add('github-banner');
     
         let bannerImg = document.createElement('img');
         bannerImg.classList.add('gh-img');
         bannerImg.setAttribute('alt', 'github-logo');
-        bannerImg.setAttribute('id', 'top-banner');
         bannerImg.setAttribute('src', './graphics/github-icon.png');
     
         let bannerSpan = document.createElement('span');
         bannerSpan.textContent = 'BRQcpp';
     
+        bannerLink.appendChild(banner);
         banner.appendChild(bannerImg);
         banner.appendChild(bannerSpan);
     
-        parent.appendChild(banner);
+        parent.appendChild(bannerLink);
     }
 });
 
@@ -120,7 +125,7 @@ function validateInput(char, equation, index, vk = false, recursive = false)
                 if(((lastChar != '÷' && lastChar != '+' && lastChar != '×' && lastChar != '×' && lastChar != '-') && equation.length != 0) && index != 0)
                 {
                     if(!recursive)
-                        generateAlert('Do not put root after non operation', document.querySelector('.number-io'), document.querySelector('#number-input'));
+                        generateAlert('Put √ only at the beginning of a number', document.querySelector('.number-io'), document.querySelector('#number-input'));
                     break;  
                 }
             }
@@ -366,9 +371,9 @@ function separateEquasion(equation)
               &&  
               (equation.charAt(i) == '+' || equation.charAt(i) == '÷' || equation.charAt(i) == '×' || equation.charAt(i) == '-'))
             ||  
-        (equation.charAt(i) == '+' || equation.charAt(i) == '÷' || equation.charAt(i) == '×') )
+        (equation.charAt(i) == '+' || equation.charAt(i) == '÷' || equation.charAt(i) == '×'))
         {
-            if(equation.charAt(i) == '+' || equation.charAt(i) == '÷' || equation.charAt(i) == '×' || equation.charAt(i) == '-')
+            if((equation.charAt(i) == '+' || equation.charAt(i) == '÷' || equation.charAt(i) == '×' || equation.charAt(i) == '-') && equation.charAt(i-1) != 'e')
             {
                 if(first != i && equation.charAt(i-1) != '√')
                 {
@@ -513,8 +518,8 @@ function saveResult(calculation, result)
 {
     const parent = document.querySelector('.calc-history');
 
-    if(parent.querySelector('.github-banner'))
-        parent.removeChild(parent.querySelector('.github-banner'));
+    if(parent.querySelector('#top-banner'))
+        parent.removeChild(parent.querySelector('#top-banner'));
 
     let content = document.createElement('div');
     content.classList.add('calc-history-content');
