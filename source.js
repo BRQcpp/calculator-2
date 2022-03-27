@@ -106,8 +106,14 @@ function validateInput(char, equation, index, vk = false, recursive = false)
             override = false;
         } break;
 
-        case '√':; case '²':; case '.':; case '%':
+        case '√':; case '²':; case '.':; case '%':; case 'e':
         {
+            if(equation.charAt(index-1) == 'e')
+            {
+                generateAlert('Put + after e', document.querySelector('.number-io'), document.querySelector('#number-input'));
+                break;
+            }
+
             let lastChar = equation.charAt(index-1);
             if(lastChar == char)
                 break;
@@ -120,12 +126,21 @@ function validateInput(char, equation, index, vk = false, recursive = false)
                         break;  
                 }
             }
+            else if(char == 'e')
+            {
+                if((isNaN(lastChar) || index == 0 || lastChar == 'e') && lastChar != '²' && (lastChar != '÷' && lastChar != '+' && lastChar != '×' && lastChar != '-' && index != 0))
+                {
+                    if(!recursive)
+                        generateAlert('Put e after a number', document.querySelector('.number-io'), document.querySelector('#number-input'));
+                    break;  
+                }
+            }
             else if(char == '√')
             {
                 if(((lastChar != '÷' && lastChar != '+' && lastChar != '×' && lastChar != '×' && lastChar != '-') && equation.length != 0) && index != 0)
                 {
                     if(!recursive)
-                        generateAlert('Put √ only at the beginning of a number', document.querySelector('.number-io'), document.querySelector('#number-input'));
+                        generateAlert('Put √ at the beginning of a number', document.querySelector('.number-io'), document.querySelector('#number-input'));
                     break;  
                 }
             }
@@ -134,18 +149,21 @@ function validateInput(char, equation, index, vk = false, recursive = false)
                 if(equation.length == 0 || (isNaN(lastChar) && lastChar != '²'))
                 {
                     if(!recursive)
-                        generateAlert('Do not put % after non numbers', document.querySelector('.number-io'), document.querySelector('#number-input'));
+                        generateAlert('Put % after numbers', document.querySelector('.number-io'), document.querySelector('#number-input'));
                     break;
                 }
             }
 
-
             equation = equation.slice(0, index) + char + equation.slice(index, equation.length);
-            
         } break;
 
         case '-' : 
         {
+            if(equation.charAt(index-1) == 'e' || equation.charAt(index) == 'e')
+            {
+                generateAlert('Put + after e', document.querySelector('.number-io'), document.querySelector('#number-input'));
+                break;
+            }
             if(equation.charAt(index-1) == '.' &&  (equation.charAt(index-2) == '+' || equation.charAt(index-2) == '-' || equation.charAt(index-2) == '×'|| equation.charAt(index-2) == '÷'))
             {
                 if(!recursive)
@@ -181,6 +199,12 @@ function validateInput(char, equation, index, vk = false, recursive = false)
 
         case '+' :; case '÷':; case '×':; 
         {
+            if((equation.charAt(index-1) == 'e' && char != '+') || equation.charAt(index) == 'e')
+            {
+                generateAlert('Put + after e', document.querySelector('.number-io'), document.querySelector('#number-input'));
+                break;
+            }
+
             if(index == 0)
             {
                 if(!recursive)
@@ -205,6 +229,11 @@ function validateInput(char, equation, index, vk = false, recursive = false)
 
             if(lastChar == '÷' || lastChar == '+' || lastChar == '-' || lastChar == '×' || lastChar == '√') 
             {
+                if(equation.charAt(index-1) == 'e')
+                {
+                    generateAlert('Put + after e', document.querySelector('.number-io'), document.querySelector('#number-input'));
+                    break;
+                }
                 if(lastChar == '-')
                 {
                     let i = 1;
@@ -240,6 +269,8 @@ function validateInput(char, equation, index, vk = false, recursive = false)
 
         case '1' :; case '2':; case '3':; case '4':; case '5':; case '6':; case '7':;  case '8':;  case '9':;  case '0':;  case '(':;  case ')':
         {
+            if(equation.charAt(index-1) == 'e')
+                break;
             equation = equation.slice(0, index) + char + equation.slice(index, equation.length);
         }
     }
@@ -316,7 +347,13 @@ function resolveCalculation(equation)
     if(separatedEquasion)
     {
         if(separatedEquasion.numbers.length == 1)
-            result = Math.round((separatedEquasion.numbers.at(0)) * decimalNumbers) / decimalNumbers;
+        {
+            let rounded = Math.round((separatedEquasion.numbers.at(0)) * decimalNumbers) / decimalNumbers;
+            if(rounded.length < separatedEquasion.numbers.at(0).length)
+                result = rounded;
+            else 
+                result = separatedEquasion.numbers.at(0);
+        }
         else
         {
             result = Math.round((resolve(separatedEquasion.numbers, separatedEquasion.operations) + Number.EPSILON) * decimalNumbers) / decimalNumbers;
@@ -463,6 +500,12 @@ function isCorrectNumber(number)
         let decimals = 0;
         for(let i = 0; i < number.length; i++)
         {
+            if(number.charAt(i) == '²' && number.charAt(i+1) == 'e')
+            {
+                number = Math.pow(+number.slice(0, i), 2) + number.slice(i+1, number.length);
+                operationDone = true;
+                i = i+2;
+            }
             if(number.charAt(i) == '.')
                 decimals++;
             if(decimals == 2)
