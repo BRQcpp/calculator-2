@@ -28,6 +28,16 @@ numberInput.addEventListener('input', () =>
     validateInput(char, equation, index)
 });
 
+numberInput.addEventListener('paste', (e) => 
+{
+    e.preventDefault();
+    let paste = (e.clipboardData || window.clipboardData).getData('text');
+    for(let i = 0; i < paste.length; i++)
+    {
+        addToInput(paste.charAt(i))
+    }
+});
+
 document.querySelector('.clear-history').addEventListener('click', () =>
 {
     if(document.querySelector('.calc-history').querySelector('.calc-history-content'))
@@ -204,7 +214,6 @@ function validateInput(char, equation, index, vk = false, recursive = false)
                 generateAlert('Put + after e', document.querySelector('.number-io'), document.querySelector('#number-input'));
                 break;
             }
-
             if(index == 0)
             {
                 if(!recursive)
@@ -269,6 +278,11 @@ function validateInput(char, equation, index, vk = false, recursive = false)
 
         case '1' :; case '2':; case '3':; case '4':; case '5':; case '6':; case '7':;  case '8':;  case '9':;  case '0':;  case '(':;  case ')':
         {
+            if(equation.charAt(index-1) == '²')
+            {
+                generateAlert('Put operation after ²', document.querySelector('.number-io'), document.querySelector('#number-input'));
+                break;
+            }
             if(equation.charAt(index-1) == 'e')
                 break;
             equation = equation.slice(0, index) + char + equation.slice(index, equation.length);
